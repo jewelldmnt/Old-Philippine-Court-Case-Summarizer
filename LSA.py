@@ -2,6 +2,7 @@ import numpy as np
 from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.decomposition import TruncatedSVD
 from typing import List, Dict
+from fuzzywuzzy import fuzz
 
 class LSA:
     def __init__(self, num_topics: int = 4):
@@ -30,38 +31,43 @@ class LSA:
         """
         Rank sentences based on their importance (using the transformed matrix).
         """
-        # The importance of sentences is often derived from the sum of their transformed values (higher is better).
         sentence_scores = np.sum(transformed_matrix, axis=1)
-        ranked_indices = np.argsort(sentence_scores)[::-1]  # Sort in descending order
+        ranked_indices = np.argsort(sentence_scores)[::-1]  # Sort in descending order of importance
         return ranked_indices
 
-    def summarize_section(self, sentences: List[str], sentence_ranks: List[int], percentage: float) -> List[str]:
+    def summarize_section(self, sentences: List[str], sentence_ranks: List[int], percentage: float, headings: List[str]) -> List[str]:
         """
-        Extract a summary of the section based on the percentage of sentences to include.
+        Extract a summary of the section based on the percentage of sentences to include, excluding headings.
         """
         num_sentences = max(1, int(len(sentences) * percentage))
         selected_indices = sentence_ranks[:num_sentences]  # Top N ranked sentences
-        summary = [sentences[i] for i in selected_indices]
+
+        # Keep the original sentence order while skipping heading keywords
+        summary = []
+        for idx in selected_indices:
+            if not any(fuzz.ratio(sentences[idx].lower(), heading.lower()) >= 75 for heading in headings):
+                summary.append(sentences[idx])
+        
         return summary
 
-    def summarize(self, sections: Dict[str, List[str]], section_percentages: Dict[str, float]) -> Dict[str, List[str]]:
+    def summarize(self, sections: Dict[str, List[str]], section_percentages: Dict[str, float], headings: Dict[str, List[str]]) -> Dict[str, List[str]]:
         """
-        Summarize each section of the document by selecting sentences based on LSA.
+        Summarize each section of the document by selecting sentences based on LSA, excluding heading keywords.
         """
         summaries = {}
         for section_name, sentences in sections.items():
             if sentences:
                 # Create the term matrix for the section
                 term_matrix, vectorizer = self.create_term_matrix(sentences)
-                
+
                 # Apply SVD to the term matrix
                 transformed_matrix, svd = self.apply_svd(term_matrix)
 
                 # Rank sentences based on SVD results
                 sentence_ranks = self.rank_sentences(transformed_matrix)
 
-                # Summarize the section using the specified percentage
-                summary = self.summarize_section(sentences, sentence_ranks, section_percentages[section_name])
+                # Summarize the section using the specified percentage and excluding headings
+                summary = self.summarize_section(sentences, sentence_ranks, section_percentages[section_name], headings[section_name])
                 summaries[section_name] = summary
         return summaries
 
@@ -101,9 +107,16 @@ if __name__ == "__main__":
             'rulings': 0.45
         }
 
+        # Collect all heading keywords for exclusion in the summary
+        headings = {
+            'title': segmenter.title_headings,
+            'facts': segmenter.facts_headings,
+            'issues': segmenter.issues_headings,
+            'rulings': segmenter.ruling_headings
+        }
+
         # Generate the summary
-        summary = lsa.summarize(sections, section_percentages)
-    
+        summary = lsa.summarize(sections, section_percentages, headings)
 
         # Save the summary to a file
         lsa.save_summary(f"txt_files/sample_{i+1}/court_case_summary.txt", summary)
