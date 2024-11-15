@@ -3,11 +3,11 @@ import os
 import pandas as pd
 from fpdf import FPDF
 
-def read_file(file_path):
+def read_file(file_path, encoding):
     if not os.path.isfile(file_path):
         raise FileNotFoundError(f"The file {file_path} does not exist.")
     
-    with open(file_path, 'r', encoding='utf-8') as file:
+    with open(file_path, 'r', encoding=encoding) as file:
         return file.read()
 
 def compute_rouge_scores(human_summary, ai_summary):
@@ -29,7 +29,7 @@ def generate_pdf_report(df, output_path):
     pdf.add_page()
     pdf.set_font("Arial", size=9)
     
-    pdf.cell(0, 10, "Summit ROUGE Scores", ln=True, align='C')
+    pdf.cell(0, 10, "LSA Topic Segmentation ROUGE Scores", ln=True, align='C')
     pdf.ln(10)
     
     column_widths = [60, 40, 40, 40]
@@ -61,11 +61,11 @@ if __name__ == "__main__":
         case_path = os.path.join(main_folder, case_folder)
         if os.path.isdir(case_path):
             human_summary_path = os.path.join(case_path, 'human summary.txt')
-            ai_summary_path = os.path.join(case_path, 'summit_summary.txt')
+            ai_summary_path = os.path.join(case_path, 'LSATP_summary.txt')
 
             try:
-                human_summary = read_file(human_summary_path)
-                ai_summary = read_file(ai_summary_path)
+                human_summary = read_file(human_summary_path, 'utf-8')
+                ai_summary = read_file(ai_summary_path, 'iso-8859-1')
                 
                 scores = compute_rouge_scores(human_summary, ai_summary)
                 
@@ -85,7 +85,7 @@ if __name__ == "__main__":
     # Create DataFrame from results if results is not empty
     if results:
         df = pd.DataFrame(results)
-        generate_pdf_report(df, 'Rouge_Scores/Summit_ROUGE_Scores.pdf')
-        print("PDF report generated: Summit_ROUGE_Scores.pdf")
+        generate_pdf_report(df, 'Rouge_Scores/LSATP_ROUGE_Scores.pdf')
+        print("PDF report generated: LSATP_ROUGE_Scores.pdf")
     else:
         print("No results to process. Please check if the files are correctly named and located.")
