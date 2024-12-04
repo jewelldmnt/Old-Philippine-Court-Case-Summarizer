@@ -60,7 +60,7 @@ class LSA:
         term_matrix = vectorizer.fit_transform(sentences)
         return term_matrix, vectorizer
 
-    def apply_svd(self, term_matrix, n_components=2):
+    def apply_svd(self, term_matrix, n_components=1):
         """
         Description:
         Apply Singular Value Decomposition (SVD) to reduce the dimensionality of the term-sentence matrix.
@@ -88,7 +88,7 @@ class LSA:
         - ranked_indices: A list of indices representing sentences ranked by relevance in descending order.
         """
         sentence_scores = np.sum(svd_matrix, axis=1)
-        ranked_indices = np.argsort(sentence_scores)[::-1]  # Sort sentences by score in descending order
+        ranked_indices = np.argsort(sentence_scores)[::-1]  
         return ranked_indices
 
     def select_top_sentences(self, ranked_indices, sentences, labels):
@@ -179,9 +179,9 @@ import os
 import numpy as np
 from PartSegmentation import PartSegmentation
 from Preprocessing import Preprocessing
+
 # Usage Example
 if __name__ == "__main__":
-        # Initialize the classes
     segmenter = PartSegmentation()
     preprocessor = Preprocessing()
     
@@ -192,12 +192,9 @@ if __name__ == "__main__":
     for folder_name in os.listdir(main_folder_path):
         folder_path = os.path.join(main_folder_path, folder_name)
         
-        # Check if the path is a directory
         if os.path.isdir(folder_path):
-            # Path to the 'court_case.txt' file in the current folder
             case_file_path = os.path.join(folder_path, 'court case.txt')
             
-            # Proceed if the 'court_case.txt' file exists
             if os.path.isfile(case_file_path):
                 # Read and segment the text
                 text = segmenter.read_file(case_file_path)
@@ -208,7 +205,7 @@ if __name__ == "__main__":
 
                 # Define the percentages for each section of the summary
                 section_percentages = {
-                    'title': 1,  # No need to summarize the title
+                    'title': 1,  
                     'facts': 0.50,
                     'issues': 0.05,
                     'rulings': 0.45

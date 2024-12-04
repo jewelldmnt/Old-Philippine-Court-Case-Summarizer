@@ -6,6 +6,7 @@ from typing import List, Dict
 # Ensure to download necessary NLTK resources
 nltk.download('punkt')
 nltk.download('stopwords')
+nltk.download('punkt_tab')
 
 class Preprocessing:
     def __init__(self):
