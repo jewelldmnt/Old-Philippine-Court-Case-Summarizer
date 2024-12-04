@@ -1,6 +1,9 @@
 # Ignore virtual environment folder
 venv/
 
+# Ignore court cases folder
+Court_Cases/
+
 # Ignore Python cache files
 __pycache__/
 *.pyc
